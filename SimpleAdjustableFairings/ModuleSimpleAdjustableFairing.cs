@@ -197,6 +197,7 @@ namespace SimpleAdjustableFairings
             else
             {
                 RenderProceduralDragCubes();
+                UpdateFAR();
                 IgnoreColliders();
             }
         }
@@ -209,6 +210,7 @@ namespace SimpleAdjustableFairings
         {
             part.OnEditorAttach -= SetupFairingOnAttach;
             SetupFairing();
+            UpdateFAR();
         }
 
         private void OnSegmentNumberChange(BaseField field, object oldValue)
@@ -217,6 +219,7 @@ namespace SimpleAdjustableFairings
             UpdateCargoBay();
             part.ModifyCoM();
             part.RefreshHighlighter();
+            UpdateFAR();
         }
 
         private void OnToggleTransparent(BaseField field, object oldValue)
@@ -354,10 +357,7 @@ namespace SimpleAdjustableFairings
 
         private void FindCargoBay()
         {
-            cargoBay = part.Modules.OfType<ModuleCargoBay>().Where(module => module.DeployModuleIndex == part.Modules.IndexOf(this)).First();
-
-            if (cargoBay == null)
-                this.LogError("Cargo bay module could not be found!");
+            cargoBay = part.Modules.OfType<ModuleCargoBay>().Where(module => module.DeployModuleIndex == part.Modules.IndexOf(this)).FirstOrDefault();
         }
 
         private void HidePrefabTransforms()
@@ -482,6 +482,11 @@ namespace SimpleAdjustableFairings
             part.DragCubes.ResetCubeWeights();
         }
 
+        private void UpdateFAR()
+        {
+            part.SendMessage("GeometryPartModuleRebuildMeshData");
+        }
+
         private float CalculateFairingMass()
         {
             // Don't use linq here as it runs every frame
@@ -504,6 +509,7 @@ namespace SimpleAdjustableFairings
 
             part.ModifyCoM();
             RenderProceduralDragCubes();
+            UpdateFAR();
 
             OnStop.Fire(1f);
 
