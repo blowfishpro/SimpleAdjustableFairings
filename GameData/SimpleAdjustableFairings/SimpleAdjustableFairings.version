@@ -1,0 +1,19 @@
+{
+  "NAME": "Simple Adjustable Fairings - Plugin",
+  "DOWNLOAD" : "https://github.com/blowfishpro/SimpleAdjustableFairings/releases",
+  "URL": "https://raw.githubusercontent.com/blowfishpro/SimpleAdjustableFairings/master/GameData/SimpleAdjustableFairings/SimpleAdjustableFairings.version",
+  "GITHUB" : {
+    "USERNAME"   : "blowfishpro",
+    "REPOSITORY" : "SimpleAdjustableFairings"
+  },
+  "VERSION": {
+    "MAJOR": 1,
+    "MINOR": 0,
+    "PATCH": 0
+  },
+  "KSP_VERSION": {
+    "MAJOR": 1,
+    "MINOR": 2,
+    "PATCH": 2
+  }
+}
