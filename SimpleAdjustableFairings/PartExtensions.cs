@@ -37,12 +37,15 @@ namespace SimpleAdjustableFairings
 #endif
         }
 
-        public static void LogInfo(this Part part, object message) => Debug.Log($"[{part.name}] {message}");
-        public static void LogWarning(this Part part, object message) => Debug.LogWarning($"[{part.name}] {message}");
-        public static void LogError(this Part part, object message) => Debug.LogError($"[{part.name}] {message}");
+        public static void LogInfo(this Part part, object message) => Debug.Log($"[{SafePartName(part)}] {message}");
+        public static void LogWarning(this Part part, object message) => Debug.LogWarning($"[{SafePartName(part)}] {message}");
+        public static void LogError(this Part part, object message) => Debug.LogError($"[{SafePartName(part)}] {message}");
 
-        public static void LogInfo(this PartModule module, object message) => Debug.Log($"[{module.part.name} {module.ClassName}] {message}");
-        public static void LogWarning(this PartModule module, object message) => Debug.LogWarning($"[{module.part.name} {module.ClassName}] {message}");
-        public static void LogError(this PartModule module, object message) => Debug.LogError($"[{module.part.name} {module.ClassName}] {message}");
+        public static void LogInfo(this PartModule module, object message) => Debug.Log($"[{SafeModuleTag(module)}] {message}");
+        public static void LogWarning(this PartModule module, object message) => Debug.LogWarning($"[{SafeModuleTag(module)}] {message}");
+        public static void LogError(this PartModule module, object message) => Debug.LogError($"[{SafeModuleTag(module)}] {message}");
+
+        private static string SafePartName(Part part) => part?.partInfo?.name ?? "<unknown part>";
+        private static string SafeModuleTag(PartModule module) => SafePartName(module?.part) + ' ' + (module?.GetType().Name ?? "<null module>");
     }
 }
