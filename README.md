@@ -8,7 +8,7 @@ This plugin adds no parts by itself, it is designed to be used with a specific p
 
 This plugin is designed to work with a specific version of KSP, any others may not work:
 
-* KSP Version: 1.2.2
+* KSP Version: 1.4.3
 
 ## Authors
 
@@ -23,6 +23,12 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 [Available on Github](https://github.com/blowfishpro/SimpleAdjustableFairings/)
 
 ## Changelog
+
+### v1.1.0
+
+* Recompile for KSP 1.4.3
+* `maxSegments` now sets the maximum number of wall segments on the fairing (previously it was always 10)
+* Fix icon setup not working correctly
 
 ### v1.0.1
 
