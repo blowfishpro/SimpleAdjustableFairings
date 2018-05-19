@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -174,7 +175,7 @@ namespace SimpleAdjustableFairings
 
             if (state == StartState.Editor)
             {
-                SetupGUICallbacks();
+                SetupEditorGui();
             }
             else
             {
@@ -416,9 +417,11 @@ namespace SimpleAdjustableFairings
             part.ModifyCoM();
         }
 
-        private void SetupGUICallbacks()
+        private void SetupEditorGui()
         {
-            this.GetUIControl(nameof(numSegments)).onFieldChanged = OnSegmentNumberChange;
+            UI_FloatRange numSegmentsControl = this.GetUIControl<UI_FloatRange>(nameof(numSegments));
+            numSegmentsControl.onFieldChanged = OnSegmentNumberChange;
+            numSegmentsControl.maxValue = Math.Max(maxSegments, numSegments);
             this.GetUIControl(nameof(transparentEditor)).onFieldChanged = OnToggleTransparent;
             this.GetUIControl(nameof(openFairing)).onFieldChanged = OnToggleOpen;
             this.GetUIControl(nameof(autoDeploy)).onFieldChanged = OnToggleAutodeploy;
