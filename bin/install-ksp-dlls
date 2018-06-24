@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+set -e
+
+wget --no-check-certificate --quiet "https://drive.google.com/uc?export=download&id=${GDRIVE_DLL_PACKAGE_ID}" -O '/var/tmp/KSP_DLLs.zip'
+mkdir -p '/opt/ksp/assembly'
+unzip -P ${DLL_PACKAGE_ZIP_PASSPHRASE} '/var/tmp/KSP_DLLs.zip' -d '/opt/ksp/assembly'
+rm '/var/tmp/KSP_DLLs.zip'
