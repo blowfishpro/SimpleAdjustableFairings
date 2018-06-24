@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\GameData\SimpleAdjustableFairings\Plugins\</OutputPath>
+    <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -24,7 +24,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\GameData\SimpleAdjustableFairings\Plugins\</OutputPath>
+    <OutputPath>bin\Release</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -58,11 +58,14 @@
   <PropertyGroup>
     <PostBuildEvent>del System.Core.dll</PostBuildEvent>
   </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <PropertyGroup>
+    <PreBuildEvent>
+      sh -e -c "cd '$(SolutionDir)' &amp;&amp; 'bin/fill-version' '$(SolutionDir)/templates/AssemblyInfo.cs.erb' '$(ProjectDir)/Properties/AssemblyInfo.cs'"
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>
+      sh -e -c " mkdir -p '$(SolutionDir)/GameData/SimpleAdjustableFairings/Plugins/' &amp;&amp; cp '$(TargetPath)' '$(SolutionDir)/GameData/SimpleAdjustableFairings/Plugins/'"
+    </PostBuildEvent>
+  </PropertyGroup>
 </Project>
