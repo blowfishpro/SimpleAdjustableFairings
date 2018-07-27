@@ -122,6 +122,16 @@ namespace SimpleAdjustableFairings
 
         #endregion
 
+        #region Actions
+
+        [KSPAction("Deploy")]
+        public void DeployAction(KSPActionParam param)
+        {
+            Deploy();
+        }
+
+        #endregion
+
         #region Setup
 
         public override void OnLoad(ConfigNode node)
