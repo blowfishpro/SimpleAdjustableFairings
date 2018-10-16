@@ -10,10 +10,6 @@ This plugin is designed to work with a specific version of KSP, any others may n
 
 * KSP Version: 1.4.5
 
-## Authors
-
-* blowfish
-
 ## License
 
 Code and plugin are distributed under the [GNU Lesser General Public License](https://www.gnu.org/licenses/lgpl-3.0.en.html).  Please see that link or the included `README` file for the full license terms.
