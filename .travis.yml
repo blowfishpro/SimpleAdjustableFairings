@@ -9,9 +9,12 @@ env:
   - PATH="${PATH}:${TRAVIS_BUILD_DIR}/bin"
   - VERSION="$(git describe --tags)"
   - KSP_VERSION="$(cat KSP_VERSION)"
-  - KSP_DLL_PATH="/opt/ksp/assembly/KSP_DLLs/${KSP_VERSION}"
+  - KSP_DLL_PATH="/opt/ksp/assembly/${KSP_VERSION}"
   - BUILD_DIR="/var/tmp/simple_adjustable_fairings/build"
+before_install:
+  - sudo apt-get install python3-pip
 install:
+  - pip3 install awscli --upgrade --user
   - install-ksp-dlls
   - test -f "${KSP_DLL_PATH}/Assembly-CSharp.dll"
   - nuget restore ${TRAVIS_SOLUTION}
