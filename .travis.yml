@@ -12,7 +12,7 @@ env:
   - KSP_DLL_PATH="/opt/ksp/assembly/${KSP_VERSION}"
   - BUILD_DIR="/var/tmp/simple_adjustable_fairings/build"
 before_install:
-  - sudo apt-get install python3-pip
+  - sudo apt-get install python3-pip python3-setuptools
 install:
   - pip3 install awscli --upgrade --user
   - install-ksp-dlls
