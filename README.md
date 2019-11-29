@@ -20,6 +20,10 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 
 ## Changelog
 
+### v1.6.0
+
+* Recompile against KSP 1.8.1
+
 ### v1.5.1
 
 * Recompile against KSP 1.7.3
