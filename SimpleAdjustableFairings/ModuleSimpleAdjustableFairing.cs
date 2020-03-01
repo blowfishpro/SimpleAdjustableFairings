@@ -438,37 +438,24 @@ namespace SimpleAdjustableFairings
 
         private void CalculateAutodeployAltitude()
         {
-            if (deployed)
-            {
-                deployAltitude = 0f;
-                return;
-            }
-
-            CelestialBody home = Planetarium.fetch?.Home;
-            if (home == null)
-                this.LogError($"[{part.name} {this.GetType().Name}] Cannot find home celestial body to set altitude from");
-            
             UI_FloatRange deployAltitudeControl = this.GetUIControl<UI_FloatRange>(nameof(deployAltitude));
 
-            deployAltitudeControl.minValue = 0f;
-            deployAltitudeControl.maxValue = (float?)home?.atmosphereDepth / 1000f ?? 200f;
+            float newDeployAltitude;
 
-            if (float.IsNaN(deployAltitude))
+            if (Planetarium.fetch?.Home is CelestialBody home)
             {
-                if (home != null)
-                {
-                    deployAltitude = Mathf.Round((float)home.atmosphereDepth * 0.75f / 1000f / 5f) * 5f;
-                }
-                else
-                {
-                    autoDeploy = false;
-                    deployAltitude = 100f;
-                }
+                newDeployAltitude = Mathf.Round((float)home.atmosphereDepth * 0.75f / 1000f / 5f) * 5f;
+                deployAltitudeControl.maxValue = (float)home.atmosphereDepth / 1000f;
             }
-            else if (deployAltitude < 0f)
+            else
             {
-                deployAltitude = 0f;
+                this.LogError($"[{part.name} {GetType().Name}] Cannot find home celestial body to set altitude from");
+                autoDeploy = false;
+                newDeployAltitude = 100f;
+                deployAltitudeControl.maxValue = 200f;
             }
+
+            if (float.IsNaN(deployAltitude)) deployAltitude = newDeployAltitude;
         }
 
         private void IgnoreColliders()
