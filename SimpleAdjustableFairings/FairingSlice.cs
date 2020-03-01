@@ -13,11 +13,11 @@ namespace SimpleAdjustableFairings
 
         #region Private Fields
 
-        private ModuleSimpleAdjustableFairing parent;
+        private readonly ModuleSimpleAdjustableFairing parent;
 
-        private Transform rootTransform;
-        private Transform coneTransform;
-        private List<Transform> wallTransforms = new List<Transform>();
+        private readonly Transform rootTransform;
+        private readonly Transform coneTransform;
+        private readonly List<Transform> wallTransforms = new List<Transform>();
 
         private Quaternion rotation;
 
@@ -60,7 +60,7 @@ namespace SimpleAdjustableFairings
             rootTransform.NestToParent(parent.FairingRootTransform);
             rootTransform.localRotation = rotation;
 
-            coneTransform = UnityEngine.Object.Instantiate(parent.PrefabConeTransform);
+            coneTransform = Object.Instantiate(parent.PrefabConeTransform);
             coneTransform.NestToParent(rootTransform);
             coneTransform.gameObject.SetActive(true);
             coneTransform.SetCollidersEnabled(parent.FairingCollidersEnabled);
@@ -101,7 +101,6 @@ namespace SimpleAdjustableFairings
         {
             if (detached) return;
 
-            GameObject gameObject = rootTransform.gameObject;
             physicalObject physObj = physicalObject.ConvertToPhysicalObject(parent.part, rootTransform.gameObject);
             Rigidbody rigidBody = physObj.rb;
 
@@ -159,11 +158,9 @@ namespace SimpleAdjustableFairings
 
             if (segmentChange > 0)
             {
-                int numToAdd = segmentChange;
-
                 for (int i = NumSegments; i < newNumSegments; i++)
                 {
-                    Transform wallTransform = UnityEngine.Object.Instantiate(parent.PrefabWallTransform);
+                    Transform wallTransform = Object.Instantiate(parent.PrefabWallTransform);
                     wallTransform.NestToParent(rootTransform);
                     wallTransform.gameObject.SetActive(true);
                     wallTransform.localPosition = parent.SegmentOffset * i + WallData.rootOffset;
@@ -178,11 +175,9 @@ namespace SimpleAdjustableFairings
             }
             else if (segmentChange < 0)
             {
-                int numToRemove = -segmentChange;
-
                 for (int i = NumSegments - 1; i >= newNumSegments; i--)
                 {
-                    UnityEngine.Object.Destroy(wallTransforms[i].gameObject);
+                    Object.Destroy(wallTransforms[i].gameObject);
                     wallTransforms.RemoveAt(i);
                 }
             }

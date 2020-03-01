@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEngine;
 
@@ -78,11 +79,8 @@ namespace SimpleAdjustableFairings
 
         #region Private fields
 
-        private List<FairingSlice> slices = new List<FairingSlice>();
+        private readonly List<FairingSlice> slices = new List<FairingSlice>();
         private ModuleCargoBay cargoBay;
-
-        private EventData<float, float> fairingDeployStart = new EventData<float, float>("FairingDeployStart");
-        private EventData<float> fairingDeployEnd = new EventData<float>("FairingDeployEnd");
 
         [SerializeField]
         private string serializedData;
@@ -124,6 +122,7 @@ namespace SimpleAdjustableFairings
 
         #region Actions
 
+        [SuppressMessage("Style", "IDE0060", Justification = "Required by KSP")]
         [KSPAction("Deploy")]
         public void DeployAction(KSPActionParam param)
         {
@@ -291,8 +290,8 @@ namespace SimpleAdjustableFairings
         public string ScalarModuleID => moduleID;
         public float GetScalar => deployed ? 1f : 0f;
         public bool CanMove => !deployed;
-        public EventData<float, float> OnMoving => fairingDeployStart;
-        public EventData<float> OnStop => fairingDeployEnd;
+        public EventData<float, float> OnMoving { get; } = new EventData<float, float>("FairingDeployStart");
+        public EventData<float> OnStop { get; } = new EventData<float>("FairingDeployEnd");
 
         public void SetScalar(float f) { }
         public void SetUIRead(bool state) { }

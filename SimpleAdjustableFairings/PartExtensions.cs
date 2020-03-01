@@ -21,8 +21,7 @@ namespace SimpleAdjustableFairings
                 float moduleMass = modifier.GetModuleMass(prefabMass, ModifierStagingSituation.CURRENT);
                 mass += moduleMass;
 
-                IPartCoMModifier modifier2 = modifier as IPartCoMModifier;
-                if (modifier2 != null)
+                if (modifier is IPartCoMModifier modifier2)
                     CoM += modifier2.GetModuleCoM() * moduleMass;
                 else
                     CoM += prefabCoM * moduleMass;
