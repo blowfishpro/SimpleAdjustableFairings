@@ -79,6 +79,15 @@ namespace SimpleAdjustableFairings
 
         #region Private fields
 
+        private ModelData wallData;
+        private ModelData coneData;
+
+        private GameObject coneObjectPrefab;
+        private GameObject wallObjectPrefab;
+
+        private Transform modelRootTransform;
+        private Transform fairingRootTransform;
+
         private readonly List<FairingSlice> slices = new List<FairingSlice>();
         private ModuleCargoBay cargoBay;
 
@@ -89,17 +98,7 @@ namespace SimpleAdjustableFairings
 
         #region Properties
 
-        public ModelData WallData { get; private set; }
-        public ModelData ConeData { get; private set; }
-
-        public Transform ModelRootTransform { get; private set; }
-        public Transform FairingRootTransform { get; private set; }
-        public Transform PrefabWallTransform { get; private set; }
-        public Transform PrefabConeTransform { get; private set; }
-
-        public Vector3 SegmentOffset => axis * segmentLength;
-
-        public bool FairingCollidersEnabled => !HighLogic.LoadedSceneIsEditor;
+        private Vector3 SegmentOffset => axis * segmentLength;
 
         #endregion
 
@@ -139,11 +138,11 @@ namespace SimpleAdjustableFairings
 
             ConfigNode wallDataNode = node.GetNode("WALL");
             if (wallDataNode != null)
-                WallData = ConfigNode.CreateObjectFromConfig<ModelData>(wallDataNode);
+                wallData = ConfigNode.CreateObjectFromConfig<ModelData>(wallDataNode);
 
             ConfigNode coneDataNode = node.GetNode("CONE");
             if (coneDataNode != null)
-                ConeData = ConfigNode.CreateObjectFromConfig<ModelData>(coneDataNode);
+                coneData = ConfigNode.CreateObjectFromConfig<ModelData>(coneDataNode);
         }
 
         public override void OnIconCreate()
@@ -159,6 +158,13 @@ namespace SimpleAdjustableFairings
             base.OnStartFinished(state);
 
             if (!FindTransforms()) return;
+
+            if (state == StartState.Editor)
+            {
+                coneObjectPrefab.SetCollidersEnabled(false);
+                wallObjectPrefab.SetCollidersEnabled(false);
+            }
+
             FindCargoBay();
 
             HidePrefabTransforms();
@@ -201,8 +207,8 @@ namespace SimpleAdjustableFairings
         public void OnBeforeSerialize()
         {
             ConfigNode node = new ConfigNode("SERIALIZED_DATA");
-            if (WallData != null) node.AddNode("wallData", ConfigNode.CreateConfigFromObject(WallData));
-            if (ConeData != null) node.AddNode("coneData", ConfigNode.CreateConfigFromObject(ConeData));
+            if (wallData != null) node.AddNode("wallData", ConfigNode.CreateConfigFromObject(wallData));
+            if (coneData != null) node.AddNode("coneData", ConfigNode.CreateConfigFromObject(coneData));
             serializedData = node.ToString();
         }
 
@@ -224,11 +230,11 @@ namespace SimpleAdjustableFairings
             }
 
             ConfigNode wallDataNode = node2.GetNode("wallData");
-            if (wallDataNode != null) WallData = ConfigNode.CreateObjectFromConfig<ModelData>(wallDataNode);
+            if (wallDataNode != null) wallData = ConfigNode.CreateObjectFromConfig<ModelData>(wallDataNode);
             else this.LogWarning("no wall data found in node!");
 
             ConfigNode coneDataNode = node2.GetNode("coneData");
-            if (coneDataNode != null) ConeData = ConfigNode.CreateObjectFromConfig<ModelData>(coneDataNode);
+            if (coneDataNode != null) coneData = ConfigNode.CreateObjectFromConfig<ModelData>(coneDataNode);
             else this.LogWarning("no cone data found in node!");
         }
 
@@ -259,14 +265,7 @@ namespace SimpleAdjustableFairings
 
         private void OnToggleOpen(BaseField field, object oldValue)
         {
-            if (openFairing)
-            {
-                slices.ForEach(slice => slice.Open());
-            }
-            else
-            {
-                slices.ForEach(slice => slice.Close());
-            }
+            UpdateOpen();
         }
 
         private void OnToggleAutodeploy(BaseField field, object oldValue)
@@ -322,13 +321,12 @@ namespace SimpleAdjustableFairings
             foreach (FairingSlice slice in slices)
             {
                 float sliceMass = slice.Mass;
-                CoM += slice.CalculatePartRelativeCoM() * sliceMass;
+                Vector3 worldCoM = slice.SliceRootObject.transform.TransformPoint(slice.CalculateCoM());
+                CoM += part.partTransform.InverseTransformPoint(worldCoM) * sliceMass;
                 mass += sliceMass;
             }
 
-            CoM /= mass;
-            
-            return CoM;
+            return (mass > 0) ? CoM / mass : Vector3.zero;
         }
 
         #endregion
@@ -338,40 +336,40 @@ namespace SimpleAdjustableFairings
         private bool FindTransforms()
         {
             bool result = true;
-            ModelRootTransform = part.FindModelTransform("model");
+            modelRootTransform = part.FindModelTransform("model");
 
-            if (ModelRootTransform == null)
+            if (modelRootTransform == null)
             {
                 this.LogError("Root transform could not be found!");
                 result = false;
             }
 
-            if (WallData == null)
+            if (wallData == null)
             {
                 this.LogError("wallData is null, cannot find transform!");
                 result = false;
             }
             else
             {
-                PrefabWallTransform = part.FindModelTransform(WallData.transformName);
-                if (PrefabWallTransform == null)
+                wallObjectPrefab = part.FindModelTransform(wallData.transformName)?.gameObject;
+                if (wallObjectPrefab == null)
                 {
-                    this.LogError($"Could not find wall transform named '{WallData.transformName}'");
+                    this.LogError($"Could not find wall transform named '{wallData.transformName}'");
                     result = false;
                 }
             }
 
-            if (ConeData == null)
+            if (coneData == null)
             {
                 this.LogError("coneData is null, cannot find transform!");
                 result = false;
             }
             else
             {
-                PrefabConeTransform = part.FindModelTransform(ConeData.transformName);
-                if (PrefabConeTransform == null)
+                coneObjectPrefab = part.FindModelTransform(coneData.transformName)?.gameObject;
+                if (coneObjectPrefab == null)
                 {
-                    this.LogError($"Could not find cone transform named '{ConeData.transformName}'");
+                    this.LogError($"Could not find cone transform named '{coneData.transformName}'");
                     result = false;
                 }
             }
@@ -381,8 +379,8 @@ namespace SimpleAdjustableFairings
 
         private void SetupForIcon()
         {
-            PrefabConeTransform.localPosition = (SegmentOffset  + ConeData.rootOffset) / scale;
-            PrefabWallTransform.localPosition = WallData.rootOffset / scale;
+            coneObjectPrefab.transform.localPosition = (SegmentOffset  + coneData.rootOffset) / scale;
+            wallObjectPrefab.transform.localPosition = wallData.rootOffset / scale;
         }
 
         private void FindCargoBay()
@@ -392,8 +390,8 @@ namespace SimpleAdjustableFairings
 
         private void HidePrefabTransforms()
         {
-            PrefabConeTransform.gameObject.SetActive(false);
-            PrefabWallTransform.gameObject.SetActive(false);
+            coneObjectPrefab.SetActive(false);
+            wallObjectPrefab.SetActive(false);
         }
 
         private void HideDeployEvent()
@@ -411,17 +409,24 @@ namespace SimpleAdjustableFairings
             if (oldFairing != null) Destroy(oldFairing);
 
             GameObject fairingRootGO = new GameObject(FAIRING_ROOT_TRANSFORM_NAME);
-            FairingRootTransform = fairingRootGO.transform;
-            FairingRootTransform.NestToParent(ModelRootTransform);
+            fairingRootTransform = fairingRootGO.transform;
+            fairingRootTransform.NestToParent(modelRootTransform);
 
             slices.Clear();
             for (int i = 0; i < numSlices; i++)
             {
-                slices.Add(new FairingSlice(this, i));
+
+                GameObject sliceRoot = new GameObject("FairingSlice");
+
+                sliceRoot.transform.NestToParent(fairingRootTransform);
+                sliceRoot.transform.localRotation = Quaternion.AngleAxis(360f / numSlices * i, axis);
+
+                slices.Add(new FairingSlice(sliceRoot, coneObjectPrefab, wallObjectPrefab, coneData, wallData, SegmentOffset, scale));
             }
 
             UpdateSegments();
             UpdateTransparency();
+            UpdateOpen();
             UpdateCargoBay();
             part.ModifyCoM();
         }
@@ -460,7 +465,7 @@ namespace SimpleAdjustableFairings
 
         private void IgnoreColliders()
         {
-            CollisionManager.IgnoreCollidersOnVessel(vessel, FairingRootTransform.GetComponentsInChildren<Collider>());
+            CollisionManager.IgnoreCollidersOnVessel(vessel, fairingRootTransform.GetComponentsInChildren<Collider>());
         }
 
         private void UpdateSegments()
@@ -477,6 +482,18 @@ namespace SimpleAdjustableFairings
             else
             {
                 slices.ForEach(slice => slice.MakeOpaque());
+            }
+        }
+
+        private void UpdateOpen()
+        {
+            if (openFairing && HighLogic.LoadedSceneIsEditor)
+            {
+                slices.ForEach(slice => slice.SetOffset(editorOpenOffset));
+            }
+            else
+            {
+                slices.ForEach(slice => slice.SetOffset(Vector3.zero));
             }
         }
 
@@ -524,7 +541,33 @@ namespace SimpleAdjustableFairings
 
             OnMoving.Fire(0f, 1f);
 
-            slices.ForEach(slice => slice.Detach());
+            foreach (FairingSlice slice in slices)
+            {
+                GameObject gameObject = slice.SliceRootObject;
+                physicalObject physObj = physicalObject.ConvertToPhysicalObject(part, gameObject);
+                Rigidbody rigidBody = physObj.rb;
+
+                rigidBody.useGravity = true;
+                rigidBody.mass = slice.Mass;
+                rigidBody.centerOfMass = slice.CalculateCoM();
+                rigidBody.drag = part.Rigidbody.drag / numSlices;
+                rigidBody.angularDrag = part.Rigidbody.angularDrag;
+                rigidBody.angularVelocity = part.Rigidbody.angularVelocity;
+                rigidBody.maxAngularVelocity = PhysicsGlobals.MaxAngularVelocity;
+                rigidBody.velocity = part.Rigidbody.velocity + Vector3.Cross(part.Rigidbody.worldCenterOfMass - vessel.CurrentCoM, vessel.angularVelocity);
+
+                Vector3 planeNormal = part.partTransform.TransformDirection(axis);
+                Vector3 centerOfMassDirection = (rigidBody.worldCenterOfMass - part.Rigidbody.worldCenterOfMass).normalized;
+                Vector3 outDirection = Vector3.ProjectOnPlane(centerOfMassDirection, planeNormal).normalized;
+
+                Vector3 forceDirection = (planeNormal * 0.5f + outDirection).normalized;
+                Vector3 torqueDirection = Vector3.Cross(planeNormal, outDirection);
+
+                rigidBody.AddForce(forceDirection * deploySpeed, ForceMode.VelocityChange);
+                rigidBody.AddTorque(torqueDirection * deployAngularSpeed, ForceMode.VelocityChange);
+            }
+
+            slices.Clear();
 
             part.ModifyCoM();
             RenderProceduralDragCubes();

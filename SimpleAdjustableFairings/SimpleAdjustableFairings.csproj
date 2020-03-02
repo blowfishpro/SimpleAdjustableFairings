@@ -56,12 +56,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FairingSlice.cs" />
+    <Compile Include="GameObjectExtensions.cs" />
     <Compile Include="ModelData.cs" />
     <Compile Include="ModuleSimpleAdjustableFairing.cs" />
     <Compile Include="PartExtensions.cs" />
     <Compile Include="PartModuleExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TransformExtensions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
