@@ -16,9 +16,8 @@ namespace SimpleAdjustableFairings
 
         private readonly GameObject subRootObject;
         private readonly GameObject coneObject;
-        private readonly GameObject wallPrefab;
-        private readonly ModelData coneData;
-        private readonly ModelData wallData;
+        private readonly ResolvedModelData conePrefab;
+        private readonly ResolvedModelData wallPrefab;
         private readonly Vector3 segmentOffset;
         private readonly float scale;
 
@@ -44,25 +43,24 @@ namespace SimpleAdjustableFairings
             }
         }
 
-        public float Mass => NumSegments * (wallData?.mass ?? 0) + coneData.mass;
+        public float Mass => NumSegments * (wallPrefab?.mass ?? 0) + conePrefab.mass;
 
         #endregion
 
         #region Constructors
 
-        public FairingSlice(GameObject sliceRoot, GameObject conePrefab, GameObject wallPrefab, ModelData coneData, ModelData wallData, Vector3 segmentOffset, float scale)
+        public FairingSlice(GameObject sliceRoot, ResolvedModelData conePrefab, ResolvedModelData wallPrefab, Vector3 segmentOffset, float scale)
         {
             SliceRootObject = sliceRoot ?? throw new ArgumentNullException(nameof(sliceRoot));
+            this.conePrefab = conePrefab ?? throw new ArgumentNullException(nameof(conePrefab));
             this.wallPrefab = wallPrefab;
-            this.coneData = coneData ?? throw new ArgumentNullException(nameof(coneData));
-            this.wallData = wallData;
             this.segmentOffset = segmentOffset;
             this.scale = scale;
 
             subRootObject = new GameObject("FairingSlice-Sub");
             subRootObject.transform.NestToParent(SliceRootObject.transform);
 
-            coneObject = UnityEngine.Object.Instantiate(conePrefab, subRootObject.transform);
+            coneObject = UnityEngine.Object.Instantiate(conePrefab.gameObject, subRootObject.transform);
             coneObject.transform.localScale *= scale;
             coneObject.gameObject.SetActive(true);
         }
@@ -94,11 +92,11 @@ namespace SimpleAdjustableFairings
 
         public Vector3 CalculateCoM()
         {
-            Vector3 CoM = (coneObject.transform.localPosition + coneData.CoM) * coneData.mass;
+            Vector3 CoM = (coneObject.transform.localPosition + conePrefab.CoM) * conePrefab.mass;
 
             foreach (GameObject wallObject in wallObjects)
             {
-                CoM += (wallObject.transform.localPosition + wallData.CoM) * wallData.mass;
+                CoM += (wallObject.transform.localPosition + wallPrefab.CoM) * wallPrefab.mass;
             }
 
             CoM /= Mass;
@@ -108,9 +106,9 @@ namespace SimpleAdjustableFairings
 
         public void UpdateSegments(int newNumSegments)
         {
-            coneObject.transform.localPosition = (segmentOffset * newNumSegments) + coneData.rootOffset;
+            coneObject.transform.localPosition = (segmentOffset * newNumSegments) + conePrefab.rootOffset;
 
-            if (newNumSegments != 0 && (wallData == null || wallPrefab == null))
+            if (newNumSegments != 0 && wallPrefab == null)
                 throw new InvalidOperationException("Cannot change segment number when wall data is null");
 
             int segmentChange = newNumSegments - NumSegments;
@@ -119,9 +117,9 @@ namespace SimpleAdjustableFairings
             {
                 for (int i = NumSegments; i < newNumSegments; i++)
                 {
-                    GameObject wallObject = UnityEngine.Object.Instantiate(wallPrefab, subRootObject.transform);
+                    GameObject wallObject = UnityEngine.Object.Instantiate(wallPrefab.gameObject, subRootObject.transform);
                     wallObject.SetActive(true);
-                    wallObject.transform.localPosition = segmentOffset * i + wallData.rootOffset;
+                    wallObject.transform.localPosition = segmentOffset * i + wallPrefab.rootOffset;
                     wallObject.transform.localScale *= scale;
                     wallObjects.Add(wallObject);
 

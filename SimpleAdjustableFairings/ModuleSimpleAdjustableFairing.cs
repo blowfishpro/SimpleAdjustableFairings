@@ -82,8 +82,8 @@ namespace SimpleAdjustableFairings
         private ModelData wallData;
         private ModelData coneData;
 
-        private GameObject coneObjectPrefab;
-        private GameObject wallObjectPrefab;
+        private ResolvedModelData coneObjectPrefab;
+        private ResolvedModelData wallObjectPrefab;
 
         private Transform modelRootTransform;
         private Transform fairingRootTransform;
@@ -161,8 +161,8 @@ namespace SimpleAdjustableFairings
 
             if (state == StartState.Editor)
             {
-                coneObjectPrefab.SetCollidersEnabled(false);
-                wallObjectPrefab?.SetCollidersEnabled(false);
+                coneObjectPrefab.gameObject.SetCollidersEnabled(false);
+                wallObjectPrefab?.gameObject.SetCollidersEnabled(false);
             }
 
             FindCargoBay();
@@ -341,15 +341,18 @@ namespace SimpleAdjustableFairings
             if (modelRootTransform == null)
             {
                 this.LogError("Root transform could not be found!");
-                result = false;
+                return false;
             }
 
             if (wallData != null)
             {
-                wallObjectPrefab = part.FindModelTransform(wallData.transformName)?.gameObject;
-                if (wallObjectPrefab == null)
+                try
                 {
-                    this.LogError($"Could not find wall transform named '{wallData.transformName}'");
+                    wallObjectPrefab = wallData.Resolve(modelRootTransform.gameObject);
+                }
+                catch (ModelData.ResolveException ex)
+                {
+                    this.LogException(ex);
                     result = false;
                 }
             }
@@ -361,10 +364,13 @@ namespace SimpleAdjustableFairings
             }
             else
             {
-                coneObjectPrefab = part.FindModelTransform(coneData.transformName)?.gameObject;
-                if (coneObjectPrefab == null)
+                try
                 {
-                    this.LogError($"Could not find cone transform named '{coneData.transformName}'");
+                    coneObjectPrefab = coneData.Resolve(modelRootTransform.gameObject);
+                }
+                catch (ModelData.ResolveException ex)
+                {
+                    this.LogException(ex);
                     result = false;
                 }
             }
@@ -374,8 +380,8 @@ namespace SimpleAdjustableFairings
 
         private void SetupForIcon()
         {
-            coneObjectPrefab.transform.localPosition = (SegmentOffset  + coneData.rootOffset) / scale;
-            if (wallData != null) wallObjectPrefab.transform.localPosition = wallData.rootOffset / scale;
+            coneObjectPrefab.gameObject.transform.localPosition = (SegmentOffset + coneObjectPrefab.rootOffset) / scale;
+            if (wallObjectPrefab != null) wallObjectPrefab.gameObject.transform.localPosition = wallObjectPrefab.rootOffset / scale;
         }
 
         private void FindCargoBay()
@@ -385,8 +391,8 @@ namespace SimpleAdjustableFairings
 
         private void HidePrefabTransforms()
         {
-            coneObjectPrefab.SetActive(false);
-            wallObjectPrefab?.SetActive(false);
+            coneObjectPrefab.gameObject.SetActive(false);
+            wallObjectPrefab?.gameObject.SetActive(false);
         }
 
         private void HideDeployEvent()
@@ -416,7 +422,7 @@ namespace SimpleAdjustableFairings
                 sliceRoot.transform.NestToParent(fairingRootTransform);
                 sliceRoot.transform.localRotation = Quaternion.AngleAxis(360f / numSlices * i, axis);
 
-                slices.Add(new FairingSlice(sliceRoot, coneObjectPrefab, wallObjectPrefab, coneData, wallData, SegmentOffset, scale));
+                slices.Add(new FairingSlice(sliceRoot, coneObjectPrefab, wallObjectPrefab, SegmentOffset, scale));
             }
 
             UpdateSegments();

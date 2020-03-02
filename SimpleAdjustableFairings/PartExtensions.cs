@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace SimpleAdjustableFairings
 {
@@ -43,6 +44,8 @@ namespace SimpleAdjustableFairings
         public static void LogInfo(this PartModule module, object message) => Debug.Log($"[{SafeModuleTag(module)}] {message}");
         public static void LogWarning(this PartModule module, object message) => Debug.LogWarning($"[{SafeModuleTag(module)}] {message}");
         public static void LogError(this PartModule module, object message) => Debug.LogError($"[{SafeModuleTag(module)}] {message}");
+
+        public static void LogException(this PartModule module, Exception exception) => Debug.LogException(new System.Exception($"Exception on {SafeModuleTag(module)}", exception));
 
         private static string SafePartName(Part part) => part?.partInfo?.name ?? "<unknown part>";
         private static string SafeModuleTag(PartModule module) => SafePartName(module?.part) + ' ' + (module?.GetType().Name ?? "<null module>");
