@@ -85,8 +85,8 @@ namespace SimpleAdjustableFairings
         private ResolvedModelData coneObjectPrefab;
         private ResolvedModelData wallObjectPrefab;
 
-        private Transform modelRootTransform;
-        private Transform fairingRootTransform;
+        private GameObject modelRoot;
+        private GameObject fairingRoot;
 
         private readonly List<FairingSlice> slices = new List<FairingSlice>();
         private ModuleCargoBay cargoBay;
@@ -336,9 +336,9 @@ namespace SimpleAdjustableFairings
         private bool FindTransforms()
         {
             bool result = true;
-            modelRootTransform = part.FindModelTransform("model");
+            modelRoot = part.gameObject.transform.Find("model").gameObject;
 
-            if (modelRootTransform == null)
+            if (modelRoot == null)
             {
                 this.LogError("Root transform could not be found!");
                 return false;
@@ -348,7 +348,7 @@ namespace SimpleAdjustableFairings
             {
                 try
                 {
-                    wallObjectPrefab = wallData.Resolve(modelRootTransform.gameObject);
+                    wallObjectPrefab = wallData.Resolve(modelRoot);
                 }
                 catch (ModelData.ResolveException ex)
                 {
@@ -366,7 +366,7 @@ namespace SimpleAdjustableFairings
             {
                 try
                 {
-                    coneObjectPrefab = coneData.Resolve(modelRootTransform.gameObject);
+                    coneObjectPrefab = coneData.Resolve(modelRoot);
                 }
                 catch (ModelData.ResolveException ex)
                 {
@@ -409,9 +409,8 @@ namespace SimpleAdjustableFairings
             GameObject oldFairing = part.FindModelTransform(FAIRING_ROOT_TRANSFORM_NAME)?.gameObject;
             if (oldFairing != null) Destroy(oldFairing);
 
-            GameObject fairingRootGO = new GameObject(FAIRING_ROOT_TRANSFORM_NAME);
-            fairingRootTransform = fairingRootGO.transform;
-            fairingRootTransform.NestToParent(modelRootTransform);
+            fairingRoot = new GameObject(FAIRING_ROOT_TRANSFORM_NAME);
+            fairingRoot.transform.NestToParent(modelRoot.transform);
 
             slices.Clear();
             for (int i = 0; i < numSlices; i++)
@@ -419,7 +418,7 @@ namespace SimpleAdjustableFairings
 
                 GameObject sliceRoot = new GameObject("FairingSlice");
 
-                sliceRoot.transform.NestToParent(fairingRootTransform);
+                sliceRoot.transform.NestToParent(fairingRoot.transform);
                 sliceRoot.transform.localRotation = Quaternion.AngleAxis(360f / numSlices * i, axis);
 
                 slices.Add(new FairingSlice(sliceRoot, coneObjectPrefab, wallObjectPrefab, SegmentOffset, scale));
@@ -467,7 +466,7 @@ namespace SimpleAdjustableFairings
 
         private void IgnoreColliders()
         {
-            CollisionManager.IgnoreCollidersOnVessel(vessel, fairingRootTransform.GetComponentsInChildren<Collider>());
+            CollisionManager.IgnoreCollidersOnVessel(vessel, fairingRoot.GetComponentsInChildren<Collider>());
         }
 
         private void UpdateSegments()
