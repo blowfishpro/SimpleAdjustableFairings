@@ -60,9 +60,12 @@ namespace SimpleAdjustableFairings
             subRootObject = new GameObject("FairingSlice-Sub");
             subRootObject.transform.NestToParent(SliceRootObject.transform);
 
-            coneObject = UnityEngine.Object.Instantiate(conePrefab.gameObject, subRootObject.transform);
-            coneObject.transform.localScale *= scale;
-            coneObject.gameObject.SetActive(true);
+            coneObject = new GameObject("FairingCone");
+            coneObject.transform.NestToParent(subRootObject.transform);
+            GameObject mainConeObject = UnityEngine.Object.Instantiate(conePrefab.gameObject, coneObject.transform);
+            mainConeObject.transform.localPosition = conePrefab.rootOffset;
+            mainConeObject.transform.localScale *= scale;
+            mainConeObject.gameObject.SetActive(true);
         }
 
         #endregion
@@ -106,7 +109,7 @@ namespace SimpleAdjustableFairings
 
         public void UpdateSegments(int newNumSegments)
         {
-            coneObject.transform.localPosition = (segmentOffset * newNumSegments) + conePrefab.rootOffset;
+            coneObject.transform.localPosition = segmentOffset * newNumSegments;
 
             if (newNumSegments != 0 && wallPrefab == null)
                 throw new InvalidOperationException("Cannot change segment number when wall data is null");
