@@ -48,6 +48,12 @@ namespace SimpleAdjustableFairings
         [KSPField]
         public float scale = 1f;
 
+        [Persistent(name = "WALL")]
+        private readonly ModelData wallData = null;
+
+        [Persistent(name = "CONE")]
+        private readonly ModelData coneData = null;
+
         #endregion
 
         #region Persistent Fields
@@ -78,9 +84,6 @@ namespace SimpleAdjustableFairings
         #endregion
 
         #region Private fields
-
-        private ModelData wallData;
-        private ModelData coneData;
 
         private ResolvedModelData coneObjectPrefab;
         private ResolvedModelData wallObjectPrefab;
@@ -136,13 +139,7 @@ namespace SimpleAdjustableFairings
         {
             base.OnLoad(node);
 
-            ConfigNode wallDataNode = node.GetNode("WALL");
-            if (wallDataNode != null)
-                wallData = ConfigNode.CreateObjectFromConfig<ModelData>(wallDataNode);
-
-            ConfigNode coneDataNode = node.GetNode("CONE");
-            if (coneDataNode != null)
-                coneData = ConfigNode.CreateObjectFromConfig<ModelData>(coneDataNode);
+            ConfigNode.LoadObjectFromConfig(this, node);
         }
 
         public override void OnIconCreate()
@@ -207,8 +204,7 @@ namespace SimpleAdjustableFairings
         public void OnBeforeSerialize()
         {
             ConfigNode node = new ConfigNode("SERIALIZED_DATA");
-            if (wallData != null) node.AddNode("wallData", ConfigNode.CreateConfigFromObject(wallData));
-            if (coneData != null) node.AddNode("coneData", ConfigNode.CreateConfigFromObject(coneData));
+            ConfigNode.CreateConfigFromObject(this, node);
             serializedData = node.ToString();
         }
 
@@ -229,13 +225,8 @@ namespace SimpleAdjustableFairings
                 return;
             }
 
-            ConfigNode wallDataNode = node2.GetNode("wallData");
-            if (wallDataNode != null) wallData = ConfigNode.CreateObjectFromConfig<ModelData>(wallDataNode);
-            else this.LogWarning("no wall data found in node!");
 
-            ConfigNode coneDataNode = node2.GetNode("coneData");
-            if (coneDataNode != null) coneData = ConfigNode.CreateObjectFromConfig<ModelData>(coneDataNode);
-            else this.LogWarning("no cone data found in node!");
+            ConfigNode.LoadObjectFromConfig(this, node2);
         }
 
         #endregion
