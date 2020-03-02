@@ -44,7 +44,7 @@ namespace SimpleAdjustableFairings
             }
         }
 
-        public float Mass => NumSegments * wallData.mass + coneData.mass;
+        public float Mass => NumSegments * (wallData?.mass ?? 0) + coneData.mass;
 
         #endregion
 
@@ -53,9 +53,9 @@ namespace SimpleAdjustableFairings
         public FairingSlice(GameObject sliceRoot, GameObject conePrefab, GameObject wallPrefab, ModelData coneData, ModelData wallData, Vector3 segmentOffset, float scale)
         {
             SliceRootObject = sliceRoot ?? throw new ArgumentNullException(nameof(sliceRoot));
-            this.wallPrefab = wallPrefab ?? throw new ArgumentNullException(nameof(wallPrefab));
+            this.wallPrefab = wallPrefab;
             this.coneData = coneData ?? throw new ArgumentNullException(nameof(coneData));
-            this.wallData = wallData ?? throw new ArgumentNullException(nameof(wallData));
+            this.wallData = wallData;
             this.segmentOffset = segmentOffset;
             this.scale = scale;
 
@@ -109,6 +109,9 @@ namespace SimpleAdjustableFairings
         public void UpdateSegments(int newNumSegments)
         {
             coneObject.transform.localPosition = (segmentOffset * newNumSegments) + coneData.rootOffset;
+
+            if (newNumSegments != 0 && (wallData == null || wallPrefab == null))
+                throw new InvalidOperationException("Cannot change segment number when wall data is null");
 
             int segmentChange = newNumSegments - NumSegments;
 

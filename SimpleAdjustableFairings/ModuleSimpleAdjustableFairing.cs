@@ -162,7 +162,7 @@ namespace SimpleAdjustableFairings
             if (state == StartState.Editor)
             {
                 coneObjectPrefab.SetCollidersEnabled(false);
-                wallObjectPrefab.SetCollidersEnabled(false);
+                wallObjectPrefab?.SetCollidersEnabled(false);
             }
 
             FindCargoBay();
@@ -344,12 +344,7 @@ namespace SimpleAdjustableFairings
                 result = false;
             }
 
-            if (wallData == null)
-            {
-                this.LogError("wallData is null, cannot find transform!");
-                result = false;
-            }
-            else
+            if (wallData != null)
             {
                 wallObjectPrefab = part.FindModelTransform(wallData.transformName)?.gameObject;
                 if (wallObjectPrefab == null)
@@ -380,7 +375,7 @@ namespace SimpleAdjustableFairings
         private void SetupForIcon()
         {
             coneObjectPrefab.transform.localPosition = (SegmentOffset  + coneData.rootOffset) / scale;
-            wallObjectPrefab.transform.localPosition = wallData.rootOffset / scale;
+            if (wallData != null) wallObjectPrefab.transform.localPosition = wallData.rootOffset / scale;
         }
 
         private void FindCargoBay()
@@ -391,7 +386,7 @@ namespace SimpleAdjustableFairings
         private void HidePrefabTransforms()
         {
             coneObjectPrefab.SetActive(false);
-            wallObjectPrefab.SetActive(false);
+            wallObjectPrefab?.SetActive(false);
         }
 
         private void HideDeployEvent()
@@ -433,6 +428,7 @@ namespace SimpleAdjustableFairings
 
         private void SetupEditorGui()
         {
+            if (wallData == null || maxSegments == 0) Fields[nameof(numSegments)].guiActiveEditor = false;
             UI_FloatRange numSegmentsControl = this.GetUIControl<UI_FloatRange>(nameof(numSegments));
             numSegmentsControl.onFieldChanged = OnSegmentNumberChange;
             numSegmentsControl.maxValue = Math.Max(maxSegments, numSegments);
