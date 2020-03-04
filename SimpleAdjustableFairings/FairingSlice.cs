@@ -19,6 +19,7 @@ namespace SimpleAdjustableFairings
         private readonly ResolvedModelData conePrefab;
         private readonly ResolvedModelData capPrefab;
         private readonly ResolvedModelData wallPrefab;
+        private readonly ResolvedModelData wallBasePrefab;
         private readonly Vector3 segmentOffset;
         private readonly float scale;
 
@@ -44,18 +45,19 @@ namespace SimpleAdjustableFairings
             }
         }
 
-        public float Mass => NumSegments * (wallPrefab?.mass ?? 0) + conePrefab.mass + (capPrefab?.mass ?? 0);
+        public float Mass => (wallBasePrefab?.mass ?? 0) + (NumSegments * (wallPrefab?.mass ?? 0)) + conePrefab.mass + (capPrefab?.mass ?? 0);
 
         #endregion
 
         #region Constructors
 
-        public FairingSlice(GameObject sliceRoot, ResolvedModelData conePrefab, ResolvedModelData capPrefab, ResolvedModelData wallPrefab, Vector3 segmentOffset, float scale)
+        public FairingSlice(GameObject sliceRoot, ResolvedModelData conePrefab, ResolvedModelData capPrefab, ResolvedModelData wallPrefab, ResolvedModelData wallBasePrefab, Vector3 segmentOffset, float scale)
         {
             SliceRootObject = sliceRoot ?? throw new ArgumentNullException(nameof(sliceRoot));
             this.conePrefab = conePrefab ?? throw new ArgumentNullException(nameof(conePrefab));
             this.capPrefab = capPrefab;
             this.wallPrefab = wallPrefab;
+            this.wallBasePrefab = wallBasePrefab;
             this.segmentOffset = segmentOffset;
             this.scale = scale;
 
@@ -75,6 +77,14 @@ namespace SimpleAdjustableFairings
                 coneCapObject.transform.localPosition = capPrefab.rootOffset;
                 coneCapObject.transform.localScale *= scale;
                 coneCapObject.gameObject.SetActive(true);
+            }
+
+            if (wallBasePrefab != null)
+            {
+                GameObject wallBaseObject = UnityEngine.Object.Instantiate(wallBasePrefab.gameObject, subRootObject.transform);
+                wallBaseObject.transform.localPosition = wallBasePrefab.rootOffset;
+                wallBaseObject.transform.localScale *= scale;
+                wallBaseObject.gameObject.SetActive(true);
             }
         }
 
@@ -114,6 +124,9 @@ namespace SimpleAdjustableFairings
             {
                 CoM += (wallObject.transform.localPosition + wallPrefab.CoM) * wallPrefab.mass;
             }
+
+            if (wallBasePrefab != null)
+                CoM += wallBasePrefab.CoM * wallBasePrefab.mass;
 
             CoM /= Mass;
 

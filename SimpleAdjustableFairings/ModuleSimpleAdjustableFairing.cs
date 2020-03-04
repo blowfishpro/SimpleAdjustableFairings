@@ -48,6 +48,9 @@ namespace SimpleAdjustableFairings
         [KSPField]
         public float scale = 1f;
 
+        [Persistent(name = "WALL_BASE")]
+        private readonly ModelData wallBaseData = null;
+
         [Persistent(name = "WALL")]
         private readonly ModelData wallData = null;
 
@@ -91,6 +94,7 @@ namespace SimpleAdjustableFairings
         private ResolvedModelData coneObjectPrefab;
         private ResolvedModelData capObjectPrefab;
         private ResolvedModelData wallObjectPrefab;
+        private ResolvedModelData wallBaseObjectPrefab;
 
         private GameObject modelRoot;
         private GameObject fairingRoot;
@@ -165,6 +169,7 @@ namespace SimpleAdjustableFairings
                 coneObjectPrefab.gameObject.SetCollidersEnabled(false);
                 capObjectPrefab?.gameObject.SetCollidersEnabled(false);
                 wallObjectPrefab?.gameObject.SetCollidersEnabled(false);
+                wallBaseObjectPrefab?.gameObject.SetCollidersEnabled(false);
             }
 
             FindCargoBay();
@@ -340,6 +345,19 @@ namespace SimpleAdjustableFairings
                 return false;
             }
 
+            if (wallBaseData != null)
+            {
+                try
+                {
+                    wallBaseObjectPrefab = wallBaseData.Resolve(modelRoot);
+                }
+                catch (ModelData.ResolveException ex)
+                {
+                    this.LogException(ex);
+                    result = false;
+                }
+            }
+
             if (wallData != null)
             {
                 try
@@ -392,6 +410,7 @@ namespace SimpleAdjustableFairings
             coneObjectPrefab.gameObject.transform.localPosition = (SegmentOffset + coneObjectPrefab.rootOffset) / scale;
             if (capObjectPrefab != null) capObjectPrefab.gameObject.transform.localPosition = (SegmentOffset + capObjectPrefab.rootOffset) / scale;
             if (wallObjectPrefab != null) wallObjectPrefab.gameObject.transform.localPosition = wallObjectPrefab.rootOffset / scale;
+            if (wallBaseObjectPrefab != null) wallBaseObjectPrefab.gameObject.transform.localPosition = wallBaseObjectPrefab.rootOffset / scale;
         }
 
         private void FindCargoBay()
@@ -404,6 +423,7 @@ namespace SimpleAdjustableFairings
             coneObjectPrefab.gameObject.SetActive(false);
             capObjectPrefab?.gameObject.SetActive(false);
             wallObjectPrefab?.gameObject.SetActive(false);
+            wallBaseObjectPrefab?.gameObject.SetActive(false);
         }
 
         private void HideDeployEvent()
@@ -434,7 +454,7 @@ namespace SimpleAdjustableFairings
                 sliceRoot.transform.NestToParent(fairingRoot.transform);
                 sliceRoot.transform.localRotation = Quaternion.AngleAxis(360f / numSlices * i, axis);
 
-                slices.Add(new FairingSlice(sliceRoot, coneObjectPrefab, currentCapObjectPrefab, wallObjectPrefab, SegmentOffset, scale));
+                slices.Add(new FairingSlice(sliceRoot, coneObjectPrefab, currentCapObjectPrefab, wallObjectPrefab, wallBaseObjectPrefab, SegmentOffset, scale));
 
                 currentCapObjectPrefab = null;
             }
