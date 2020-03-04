@@ -17,6 +17,7 @@ namespace SimpleAdjustableFairings
         private readonly GameObject subRootObject;
         private readonly GameObject coneObject;
         private readonly ResolvedModelData conePrefab;
+        private readonly ResolvedModelData capPrefab;
         private readonly ResolvedModelData wallPrefab;
         private readonly Vector3 segmentOffset;
         private readonly float scale;
@@ -43,16 +44,17 @@ namespace SimpleAdjustableFairings
             }
         }
 
-        public float Mass => NumSegments * (wallPrefab?.mass ?? 0) + conePrefab.mass;
+        public float Mass => NumSegments * (wallPrefab?.mass ?? 0) + conePrefab.mass + (capPrefab?.mass ?? 0);
 
         #endregion
 
         #region Constructors
 
-        public FairingSlice(GameObject sliceRoot, ResolvedModelData conePrefab, ResolvedModelData wallPrefab, Vector3 segmentOffset, float scale)
+        public FairingSlice(GameObject sliceRoot, ResolvedModelData conePrefab, ResolvedModelData capPrefab, ResolvedModelData wallPrefab, Vector3 segmentOffset, float scale)
         {
             SliceRootObject = sliceRoot ?? throw new ArgumentNullException(nameof(sliceRoot));
             this.conePrefab = conePrefab ?? throw new ArgumentNullException(nameof(conePrefab));
+            this.capPrefab = capPrefab;
             this.wallPrefab = wallPrefab;
             this.segmentOffset = segmentOffset;
             this.scale = scale;
@@ -66,6 +68,14 @@ namespace SimpleAdjustableFairings
             mainConeObject.transform.localPosition = conePrefab.rootOffset;
             mainConeObject.transform.localScale *= scale;
             mainConeObject.gameObject.SetActive(true);
+
+            if (capPrefab != null)
+            {
+                GameObject coneCapObject = UnityEngine.Object.Instantiate(capPrefab.gameObject, coneObject.transform);
+                coneCapObject.transform.localPosition = capPrefab.rootOffset;
+                coneCapObject.transform.localScale *= scale;
+                coneCapObject.gameObject.SetActive(true);
+            }
         }
 
         #endregion
@@ -96,6 +106,9 @@ namespace SimpleAdjustableFairings
         public Vector3 CalculateCoM()
         {
             Vector3 CoM = (coneObject.transform.localPosition + conePrefab.CoM) * conePrefab.mass;
+
+            if (capPrefab != null)
+                CoM += (coneObject.transform.localPosition + capPrefab.CoM) * capPrefab.mass;
 
             foreach (GameObject wallObject in wallObjects)
             {

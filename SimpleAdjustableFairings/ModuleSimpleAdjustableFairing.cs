@@ -54,6 +54,9 @@ namespace SimpleAdjustableFairings
         [Persistent(name = "CONE")]
         private readonly ModelData coneData = null;
 
+        [Persistent(name = "CAP")]
+        private readonly ModelData capData = null;
+
         #endregion
 
         #region Persistent Fields
@@ -86,6 +89,7 @@ namespace SimpleAdjustableFairings
         #region Private fields
 
         private ResolvedModelData coneObjectPrefab;
+        private ResolvedModelData capObjectPrefab;
         private ResolvedModelData wallObjectPrefab;
 
         private GameObject modelRoot;
@@ -159,6 +163,7 @@ namespace SimpleAdjustableFairings
             if (state == StartState.Editor)
             {
                 coneObjectPrefab.gameObject.SetCollidersEnabled(false);
+                capObjectPrefab?.gameObject.SetCollidersEnabled(false);
                 wallObjectPrefab?.gameObject.SetCollidersEnabled(false);
             }
 
@@ -348,6 +353,19 @@ namespace SimpleAdjustableFairings
                 }
             }
 
+            if (capData != null)
+            {
+                try
+                {
+                    capObjectPrefab = capData.Resolve(modelRoot);
+                }
+                catch (ModelData.ResolveException ex)
+                {
+                    this.LogException(ex);
+                    result = false;
+                }
+            }
+
             if (coneData == null)
             {
                 this.LogError("coneData is null, cannot find transform!");
@@ -372,6 +390,7 @@ namespace SimpleAdjustableFairings
         private void SetupForIcon()
         {
             coneObjectPrefab.gameObject.transform.localPosition = (SegmentOffset + coneObjectPrefab.rootOffset) / scale;
+            if (capObjectPrefab != null) capObjectPrefab.gameObject.transform.localPosition = (SegmentOffset + capObjectPrefab.rootOffset) / scale;
             if (wallObjectPrefab != null) wallObjectPrefab.gameObject.transform.localPosition = wallObjectPrefab.rootOffset / scale;
         }
 
@@ -383,6 +402,7 @@ namespace SimpleAdjustableFairings
         private void HidePrefabTransforms()
         {
             coneObjectPrefab.gameObject.SetActive(false);
+            capObjectPrefab?.gameObject.SetActive(false);
             wallObjectPrefab?.gameObject.SetActive(false);
         }
 
@@ -403,6 +423,8 @@ namespace SimpleAdjustableFairings
             fairingRoot = new GameObject(FAIRING_ROOT_TRANSFORM_NAME);
             fairingRoot.transform.NestToParent(modelRoot.transform);
 
+            ResolvedModelData currentCapObjectPrefab = capObjectPrefab;
+
             slices.Clear();
             for (int i = 0; i < numSlices; i++)
             {
@@ -412,7 +434,9 @@ namespace SimpleAdjustableFairings
                 sliceRoot.transform.NestToParent(fairingRoot.transform);
                 sliceRoot.transform.localRotation = Quaternion.AngleAxis(360f / numSlices * i, axis);
 
-                slices.Add(new FairingSlice(sliceRoot, coneObjectPrefab, wallObjectPrefab, SegmentOffset, scale));
+                slices.Add(new FairingSlice(sliceRoot, coneObjectPrefab, currentCapObjectPrefab, wallObjectPrefab, SegmentOffset, scale));
+
+                currentCapObjectPrefab = null;
             }
 
             UpdateSegments();
