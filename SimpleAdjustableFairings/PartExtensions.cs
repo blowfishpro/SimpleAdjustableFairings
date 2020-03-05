@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace SimpleAdjustableFairings
 {
@@ -21,8 +22,7 @@ namespace SimpleAdjustableFairings
                 float moduleMass = modifier.GetModuleMass(prefabMass, ModifierStagingSituation.CURRENT);
                 mass += moduleMass;
 
-                IPartCoMModifier modifier2 = modifier as IPartCoMModifier;
-                if (modifier2 != null)
+                if (modifier is IPartCoMModifier modifier2)
                     CoM += modifier2.GetModuleCoM() * moduleMass;
                 else
                     CoM += prefabCoM * moduleMass;
@@ -44,6 +44,8 @@ namespace SimpleAdjustableFairings
         public static void LogInfo(this PartModule module, object message) => Debug.Log($"[{SafeModuleTag(module)}] {message}");
         public static void LogWarning(this PartModule module, object message) => Debug.LogWarning($"[{SafeModuleTag(module)}] {message}");
         public static void LogError(this PartModule module, object message) => Debug.LogError($"[{SafeModuleTag(module)}] {message}");
+
+        public static void LogException(this PartModule module, Exception exception) => Debug.LogException(new System.Exception($"Exception on {SafeModuleTag(module)}", exception));
 
         private static string SafePartName(Part part) => part?.partInfo?.name ?? "<unknown part>";
         private static string SafeModuleTag(PartModule module) => SafePartName(module?.part) + ' ' + (module?.GetType().Name ?? "<null module>");

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SimpleAdjustableFairings
@@ -13,25 +14,30 @@ namespace SimpleAdjustableFairings
 
         #region Private Fields
 
-        private ModuleSimpleAdjustableFairing parent;
+        private readonly GameObject subRootObject;
+        private readonly GameObject coneObject;
+        private readonly ResolvedModelData conePrefab;
+        private readonly ResolvedModelData capPrefab;
+        private readonly ResolvedModelData wallPrefab;
+        private readonly ResolvedModelData wallBasePrefab;
+        private readonly Vector3 segmentOffset;
+        private readonly float scale;
 
-        private Transform rootTransform;
-        private Transform coneTransform;
-        private List<Transform> wallTransforms = new List<Transform>();
+        private readonly List<GameObject> wallObjects = new List<GameObject>();
 
-        private Quaternion rotation;
-
-        private bool detached = false;
+        private bool transparent = false;
 
         #endregion
 
         #region Properties
 
+        public GameObject SliceRootObject { get; }
+
         public int NumSegments
         {
             get
             {
-                return wallTransforms.Count;
+                return wallObjects.Count;
             }
             set
             {
@@ -39,159 +45,128 @@ namespace SimpleAdjustableFairings
             }
         }
 
-        public float Mass => NumSegments * WallData.mass + ConeData.mass;
-
-        private ModelData WallData => parent.WallData;
-        private ModelData ConeData => parent.ConeData;
+        public float Mass => (wallBasePrefab?.mass ?? 0) + (NumSegments * (wallPrefab?.mass ?? 0)) + conePrefab.mass + (capPrefab?.mass ?? 0);
 
         #endregion
 
         #region Constructors
 
-        public FairingSlice(ModuleSimpleAdjustableFairing parent, int index)
+        public FairingSlice(GameObject sliceRoot, ResolvedModelData conePrefab, ResolvedModelData capPrefab, ResolvedModelData wallPrefab, ResolvedModelData wallBasePrefab, Vector3 segmentOffset, float scale)
         {
-            this.parent = parent;
+            SliceRootObject = sliceRoot ?? throw new ArgumentNullException(nameof(sliceRoot));
+            this.conePrefab = conePrefab ?? throw new ArgumentNullException(nameof(conePrefab));
+            this.capPrefab = capPrefab;
+            this.wallPrefab = wallPrefab;
+            this.wallBasePrefab = wallBasePrefab;
+            this.segmentOffset = segmentOffset;
+            this.scale = scale;
 
-            GameObject gameObject = new GameObject(OBJECT_NAME);
-            rootTransform = gameObject.transform;
+            subRootObject = new GameObject("FairingSlice-Sub");
+            subRootObject.transform.NestToParent(SliceRootObject.transform);
 
-            rotation = Quaternion.AngleAxis(360f / parent.numSlices * index, parent.axis);
+            coneObject = new GameObject("FairingCone");
+            coneObject.transform.NestToParent(subRootObject.transform);
+            GameObject mainConeObject = UnityEngine.Object.Instantiate(conePrefab.gameObject, coneObject.transform);
+            mainConeObject.transform.localPosition = conePrefab.rootOffset;
+            mainConeObject.transform.localScale *= scale;
+            mainConeObject.gameObject.SetActive(true);
 
-            rootTransform.NestToParent(parent.FairingRootTransform);
-            rootTransform.localRotation = rotation;
+            if (capPrefab != null)
+            {
+                GameObject coneCapObject = UnityEngine.Object.Instantiate(capPrefab.gameObject, coneObject.transform);
+                coneCapObject.transform.localPosition = capPrefab.rootOffset;
+                coneCapObject.transform.localScale *= scale;
+                coneCapObject.gameObject.SetActive(true);
+            }
 
-            coneTransform = UnityEngine.Object.Instantiate(parent.PrefabConeTransform);
-            coneTransform.NestToParent(rootTransform);
-            coneTransform.gameObject.SetActive(true);
-            coneTransform.SetCollidersEnabled(parent.FairingCollidersEnabled);
-            coneTransform.localScale *= parent.scale;
+            if (wallBasePrefab != null)
+            {
+                GameObject wallBaseObject = UnityEngine.Object.Instantiate(wallBasePrefab.gameObject, subRootObject.transform);
+                wallBaseObject.transform.localPosition = wallBasePrefab.rootOffset;
+                wallBaseObject.transform.localScale *= scale;
+                wallBaseObject.gameObject.SetActive(true);
+            }
         }
 
         #endregion
 
         #region Public Methods
 
-        public void Open()
+        public void SetOffset(Vector3 offset)
         {
-            rootTransform.localPosition = rotation * parent.editorOpenOffset;
-        }
-
-        public void Close()
-        {
-            rootTransform.localPosition = Vector3.zero;
+            subRootObject.transform.localPosition = offset;
         }
 
         public void MakeTransparent()
         {
-            coneTransform.MakeTransparent();
-            wallTransforms.ForEach(transform => transform.MakeTransparent());
+            subRootObject.MakeTransparent();
 
-            UpdateCollidersEnabled();
+            transparent = true;
         }
 
         public void MakeOpaque()
         {
-            coneTransform.MakeOpaque();
-            wallTransforms.ForEach(transform => transform.MakeOpaque());
+            subRootObject.MakeOpaque();
 
-            UpdateCollidersEnabled();
-        }
-
-        public void Detach()
-        {
-            if (detached) return;
-
-            GameObject gameObject = rootTransform.gameObject;
-            physicalObject physObj = physicalObject.ConvertToPhysicalObject(parent.part, rootTransform.gameObject);
-            Rigidbody rigidBody = physObj.rb;
-
-            rigidBody.useGravity = true;
-            rigidBody.mass = Mass;
-            rigidBody.centerOfMass = CalculateCoM();
-            rigidBody.drag = parent.part.Rigidbody.drag / parent.numSlices;
-            rigidBody.angularDrag = parent.part.Rigidbody.angularDrag;
-            rigidBody.angularVelocity = parent.part.Rigidbody.angularVelocity;
-            rigidBody.maxAngularVelocity = PhysicsGlobals.MaxAngularVelocity;
-            rigidBody.velocity = parent.part.Rigidbody.velocity + Vector3.Cross(parent.part.Rigidbody.worldCenterOfMass - parent.vessel.CurrentCoM, parent.vessel.angularVelocity);
-
-            Vector3 planeNormal = parent.part.partTransform.TransformDirection(parent.axis);
-            Vector3 centerOfMassDirection = (rigidBody.worldCenterOfMass - parent.part.Rigidbody.worldCenterOfMass).normalized;
-            Vector3 outDirection = Vector3.ProjectOnPlane(centerOfMassDirection, planeNormal).normalized;
-
-            Vector3 forceDirection = (planeNormal * 0.5f + outDirection).normalized;
-            Vector3 torqueDirection = Vector3.Cross(planeNormal, outDirection);
-
-            rigidBody.AddForce(forceDirection * parent.deploySpeed, ForceMode.VelocityChange);
-            rigidBody.AddTorque(torqueDirection * parent.deployAngularSpeed, ForceMode.VelocityChange);
-
-            detached = true;
+            transparent = false;
         }
 
         public Vector3 CalculateCoM()
         {
-            Vector3 CoM = (coneTransform.localPosition + ConeData.CoM) * ConeData.mass;
+            Vector3 CoM = (coneObject.transform.localPosition + conePrefab.CoM) * conePrefab.mass;
 
-            foreach (Transform transform in wallTransforms)
+            if (capPrefab != null)
+                CoM += (coneObject.transform.localPosition + capPrefab.CoM) * capPrefab.mass;
+
+            foreach (GameObject wallObject in wallObjects)
             {
-                CoM += (transform.localPosition + WallData.CoM) * WallData.mass;
+                CoM += (wallObject.transform.localPosition + wallPrefab.CoM) * wallPrefab.mass;
             }
+
+            if (wallBasePrefab != null)
+                CoM += wallBasePrefab.CoM * wallBasePrefab.mass;
 
             CoM /= Mass;
 
             return CoM;
         }
 
-        public Vector3 CalculatePartRelativeCoM()
+        public void UpdateSegments(int newNumSegments)
         {
-            Vector3 worldCoM = rootTransform.TransformPoint(CalculateCoM());
-            return parent.part.partTransform.InverseTransformPoint(worldCoM);
-        }
+            coneObject.transform.localPosition = segmentOffset * newNumSegments;
 
-        #endregion
-
-        #region Private Methods
-
-        private void UpdateSegments(int newNumSegments)
-        {
-            coneTransform.localPosition = parent.SegmentOffset * newNumSegments + ConeData.rootOffset;
+            if (newNumSegments != 0 && wallPrefab == null)
+                throw new InvalidOperationException("Cannot change segment number when wall data is null");
 
             int segmentChange = newNumSegments - NumSegments;
 
             if (segmentChange > 0)
             {
-                int numToAdd = segmentChange;
-
                 for (int i = NumSegments; i < newNumSegments; i++)
                 {
-                    Transform wallTransform = UnityEngine.Object.Instantiate(parent.PrefabWallTransform);
-                    wallTransform.NestToParent(rootTransform);
-                    wallTransform.gameObject.SetActive(true);
-                    wallTransform.localPosition = parent.SegmentOffset * i + WallData.rootOffset;
-                    wallTransform.localScale *= parent.scale;
+                    GameObject wallObject = UnityEngine.Object.Instantiate(wallPrefab.gameObject, subRootObject.transform);
+                    wallObject.SetActive(true);
+                    wallObject.transform.localPosition = segmentOffset * i + wallPrefab.rootOffset;
+                    wallObject.transform.localScale *= scale;
+                    wallObjects.Add(wallObject);
 
-                    if (parent.transparentEditor)
-                        wallTransform.MakeTransparent();
-
-                    wallTransform.SetCollidersEnabled(parent.FairingCollidersEnabled);
-                    wallTransforms.Add(wallTransform);
+                    if (transparent) wallObject.MakeTransparent();
                 }
             }
             else if (segmentChange < 0)
             {
-                int numToRemove = -segmentChange;
-
                 for (int i = NumSegments - 1; i >= newNumSegments; i--)
                 {
-                    UnityEngine.Object.Destroy(wallTransforms[i].gameObject);
-                    wallTransforms.RemoveAt(i);
+                    UnityEngine.Object.Destroy(wallObjects[i]);
+                    wallObjects.RemoveAt(i);
                 }
             }
         }
 
-        private void UpdateCollidersEnabled()
+        public void UpdateCollidersEnabled(bool enabled)
         {
-            coneTransform.SetCollidersEnabled(parent.FairingCollidersEnabled);
-            wallTransforms.ForEach(transform => transform.SetCollidersEnabled(parent.FairingCollidersEnabled));
+            coneObject.SetCollidersEnabled(enabled);
+            wallObjects.ForEach(transform => transform.SetCollidersEnabled(enabled));
         }
 
         #endregion
