@@ -99,16 +99,14 @@ namespace SimpleAdjustableFairings
 
         public void MakeTransparent()
         {
-            coneObject.MakeTransparent();
-            wallObjects.ForEach(transform => transform.MakeTransparent());
+            subRootObject.MakeTransparent();
 
             transparent = true;
         }
 
         public void MakeOpaque()
         {
-            coneObject.MakeOpaque();
-            wallObjects.ForEach(transform => transform.MakeOpaque());
+            subRootObject.MakeOpaque();
 
             transparent = false;
         }
