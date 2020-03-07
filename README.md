@@ -20,6 +20,11 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 
 ## Changelog
 
+
+### v1.7.1
+
+* Fix root part fairings when loading an existing vessel
+
 ### v1.7.0
 
 * Wall now optional (but it won't be adjustable if not present)
