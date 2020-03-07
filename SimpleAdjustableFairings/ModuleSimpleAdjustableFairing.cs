@@ -49,16 +49,16 @@ namespace SimpleAdjustableFairings
         public float scale = 1f;
 
         [Persistent(name = "WALL_BASE")]
-        private readonly ModelData wallBaseData = null;
+        public ModelData wallBaseData = null;
 
         [Persistent(name = "WALL")]
-        private readonly ModelData wallData = null;
+        public ModelData wallData = null;
 
         [Persistent(name = "CONE")]
-        private readonly ModelData coneData = null;
+        public ModelData coneData = null;
 
         [Persistent(name = "CAP")]
-        private readonly ModelData capData = null;
+        public ModelData capData = null;
 
         #endregion
 
