@@ -174,8 +174,6 @@ namespace SimpleAdjustableFairings
 
             FindCargoBay();
 
-            HidePrefabTransforms();
-
             if (deployed)
             {
                 HideDeployEvent();
@@ -197,10 +195,12 @@ namespace SimpleAdjustableFairings
 
             if (state == StartState.Editor)
             {
+                HidePrefabTransforms();
                 SetupEditorGui();
             }
             else
             {
+                DestroyPrefabTransforms();
             }
         }
 
@@ -432,6 +432,14 @@ namespace SimpleAdjustableFairings
             capObjectPrefab?.gameObject.SetActive(false);
             wallObjectPrefab?.gameObject.SetActive(false);
             wallBaseObjectPrefab?.gameObject.SetActive(false);
+        }
+
+        private void DestroyPrefabTransforms()
+        {
+            Destroy(coneObjectPrefab.gameObject);
+            if (capObjectPrefab != null) Destroy(capObjectPrefab.gameObject);
+            if (wallObjectPrefab != null) Destroy(wallObjectPrefab.gameObject);
+            if (wallBaseObjectPrefab != null) Destroy(wallBaseObjectPrefab.gameObject);
         }
 
         private void HideDeployEvent()
