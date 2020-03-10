@@ -20,6 +20,9 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 
 ## Changelog
 
+### v1.7.2
+
+* Fix invisible prefabs counting for cargo bay occlusion tests
 
 ### v1.7.1
 
