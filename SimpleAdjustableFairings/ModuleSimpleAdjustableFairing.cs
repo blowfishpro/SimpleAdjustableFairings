@@ -158,9 +158,9 @@ namespace SimpleAdjustableFairings
                 SetupForIcon();
         }
 
-        public override void OnStartFinished(StartState state)
+        public override void OnStart(StartState state)
         {
-            base.OnStartFinished(state);
+            base.OnStart(state);
 
             if (!FindTransforms()) return;
 
@@ -201,10 +201,18 @@ namespace SimpleAdjustableFairings
             }
             else
             {
-                RenderProceduralDragCubes();
-                UpdateFAR();
-                IgnoreColliders();
             }
+        }
+
+        public override void OnStartFinished(StartState state)
+        {
+            base.OnStartFinished(state);
+
+            if (state == StartState.Editor) return;
+
+            RenderProceduralDragCubes();
+            UpdateFAR();
+            IgnoreColliders();
         }
 
         #endregion
