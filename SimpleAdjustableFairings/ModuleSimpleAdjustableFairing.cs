@@ -208,8 +208,6 @@ namespace SimpleAdjustableFairings
         {
             base.OnStartFinished(state);
 
-            if (state == StartState.Editor) return;
-
             RenderProceduralDragCubes();
             UpdateFAR();
             IgnoreColliders();
@@ -516,6 +514,8 @@ namespace SimpleAdjustableFairings
 
         private void IgnoreColliders()
         {
+            if (!HighLogic.LoadedSceneIsFlight) return;
+
             CollisionManager.IgnoreCollidersOnVessel(vessel, fairingRoot.GetComponentsInChildren<Collider>());
         }
 
