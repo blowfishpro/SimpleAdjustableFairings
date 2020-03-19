@@ -452,7 +452,11 @@ namespace SimpleAdjustableFairings
             // If we are duplicating in the editor, there will be some leftovers
             // Easier to just get rid of them rather than try to rebuild the hierarchy
             GameObject oldFairing = part.FindModelTransform(FAIRING_ROOT_TRANSFORM_NAME)?.gameObject;
-            if (oldFairing != null) Destroy(oldFairing);
+            if (oldFairing != null)
+            {
+                oldFairing.transform.parent = null;
+                Destroy(oldFairing);
+            }
 
             fairingRoot = new GameObject(FAIRING_ROOT_TRANSFORM_NAME);
             fairingRoot.transform.NestToParent(modelRoot.transform);

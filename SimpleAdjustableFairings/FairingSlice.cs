@@ -157,6 +157,7 @@ namespace SimpleAdjustableFairings
             {
                 for (int i = NumSegments - 1; i >= newNumSegments; i--)
                 {
+                    wallObjects[i].transform.parent = null;
                     UnityEngine.Object.Destroy(wallObjects[i]);
                     wallObjects.RemoveAt(i);
                 }
