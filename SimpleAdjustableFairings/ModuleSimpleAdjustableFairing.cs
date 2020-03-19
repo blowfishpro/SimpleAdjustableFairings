@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -105,6 +106,9 @@ namespace SimpleAdjustableFairings
         [SerializeField]
         private string serializedData;
 
+        private bool needsRecalculateDragCubes;
+        private bool needsNotifyFARToRevoxelize;
+
         #endregion
 
         #region Properties
@@ -129,17 +133,33 @@ namespace SimpleAdjustableFairings
         }
 
         [KSPEvent]
-        public void ModuleDataChanged()
+        public void ModuleDataChanged(BaseEventDetails details)
         {
             // Not yet initialized
             if (fairingRoot == null) return;
 
             FindTransforms();
             SetupFairing();
-            RenderProceduralDragCubes();
-            UpdateFAR();
+
+            if (details?.Get<Action>("requestNotifyFARToRevoxelize") is Action requestNotifyFarToRevoxelize)
+                requestNotifyFarToRevoxelize();
+            else
+                NotifyFARToRevoxelize();
+
+
+            if (details?.Get<Action>("requestRecalculateDragCubes") is Action requestRecalculateDragCubes)
+                requestRecalculateDragCubes();
+            else
+                RecalculateDragCubes();
+
             IgnoreColliders();
         }
+
+        [KSPEvent]
+        public void DragCubesWereRecalculated() => needsRecalculateDragCubes = false;
+
+        [KSPEvent]
+        public void FarWasNotifiedToRevoxelize() => needsNotifyFARToRevoxelize = false;
 
         #endregion
 
@@ -221,8 +241,8 @@ namespace SimpleAdjustableFairings
         {
             base.OnStartFinished(state);
 
-            RenderProceduralDragCubes();
-            UpdateFAR();
+            NotifyFARToRevoxelize();
+            RecalculateDragCubes();
             IgnoreColliders();
         }
 
@@ -266,7 +286,8 @@ namespace SimpleAdjustableFairings
         {
             part.OnEditorAttach -= SetupFairingOnAttach;
             SetupFairing();
-            UpdateFAR();
+            NotifyFARToRevoxelize();
+            RecalculateDragCubes();
         }
 
         private void OnSegmentNumberChange(BaseField field, object oldValue)
@@ -276,7 +297,8 @@ namespace SimpleAdjustableFairings
             UpdateCargoBay();
             part.ModifyCoM();
             part.RefreshHighlighter();
-            UpdateFAR();
+            NotifyFARToRevoxelize();
+            RecalculateDragCubes();
         }
 
         private void OnToggleTransparent(BaseField field, object oldValue)
@@ -546,6 +568,8 @@ namespace SimpleAdjustableFairings
         private void UpdateSegments()
         {
             slices.ForEach(slice => slice.NumSegments = (int)numSegments);
+            needsNotifyFARToRevoxelize = true;
+            needsRecalculateDragCubes = true;
         }
 
         private void UpdateTransparency()
@@ -585,17 +609,32 @@ namespace SimpleAdjustableFairings
 #endif
         }
 
-        private void RenderProceduralDragCubes()
+        private void NotifyFARToRevoxelize()
         {
-            DragCube newCube = DragCubeSystem.Instance.RenderProceduralDragCube(part);
-            part.DragCubes.ClearCubes();
-            part.DragCubes.Cubes.Add(newCube);
-            part.DragCubes.ResetCubeWeights();
+            if (!needsNotifyFARToRevoxelize) return;
+
+            part.SendMessage("GeometryPartModuleRebuildMeshData");
+            part.SendMessage(nameof(FarWasNotifiedToRevoxelize));
+            needsNotifyFARToRevoxelize = false;
         }
 
-        private void UpdateFAR()
+        private void RecalculateDragCubes()
         {
-            part.SendMessage("GeometryPartModuleRebuildMeshData");
+            if (!needsRecalculateDragCubes) return;
+
+            IEnumerator RecalculateDragCubesCoroutine()
+            {
+                part.DragCubes.ClearCubes();
+                yield return DragCubeSystem.Instance.SetupDragCubeCoroutine(part, null);
+                part.DragCubes.ForceUpdate(weights: true, occlusion: true);
+                part.DragCubes.SetDragWeights();
+                part.DragCubes.SetPartOcclusion();
+            }
+
+            StartCoroutine(RecalculateDragCubesCoroutine());
+
+            part.SendMessage(nameof(DragCubesWereRecalculated));
+            needsRecalculateDragCubes = false;
         }
 
         private float CalculateFairingMass()
@@ -645,8 +684,11 @@ namespace SimpleAdjustableFairings
             slices.Clear();
 
             part.ModifyCoM();
-            RenderProceduralDragCubes();
-            UpdateFAR();
+
+            needsNotifyFARToRevoxelize = true;
+            NotifyFARToRevoxelize();
+            needsRecalculateDragCubes = true;
+            RecalculateDragCubes();
 
             OnStop.Fire(1f);
 
