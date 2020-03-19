@@ -468,7 +468,7 @@ namespace SimpleAdjustableFairings
 
         private void SetupFairing()
         {
-            // If we are duplicating in the editor, there will be some leftovers
+            // If we are duplicating in the editor or reinitializing, there will be some leftovers
             // Easier to just get rid of them rather than try to rebuild the hierarchy
             GameObject oldFairing = part.FindModelTransform(FAIRING_ROOT_TRANSFORM_NAME)?.gameObject;
             if (oldFairing != null)
