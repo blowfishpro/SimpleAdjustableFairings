@@ -395,6 +395,11 @@ namespace SimpleAdjustableFairings
                 this.LogError("coneData is null, cannot find transform!");
                 result = false;
             }
+            else if (coneData.enabled == false)
+            {
+                this.LogError("coneData has enabled = false, this is illegal!");
+                result = false;
+            }
             else
             {
                 try
