@@ -128,6 +128,19 @@ namespace SimpleAdjustableFairings
             if (deployOnStage) Deploy();
         }
 
+        [KSPEvent]
+        public void ModuleDataChanged()
+        {
+            // Not yet initialized
+            if (fairingRoot == null) return;
+
+            FindTransforms();
+            SetupFairing();
+            RenderProceduralDragCubes();
+            UpdateFAR();
+            IgnoreColliders();
+        }
+
         #endregion
 
         #region Actions
