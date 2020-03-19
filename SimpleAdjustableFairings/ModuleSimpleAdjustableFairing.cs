@@ -259,6 +259,7 @@ namespace SimpleAdjustableFairings
         private void OnSegmentNumberChange(BaseField field, object oldValue)
         {
             UpdateSegments();
+            NotifyModelUpdate();
             UpdateCargoBay();
             part.ModifyCoM();
             part.RefreshHighlighter();
@@ -483,6 +484,7 @@ namespace SimpleAdjustableFairings
 
             UpdateSegments();
             UpdateTransparency();
+            NotifyModelUpdate();
             UpdateOpen();
             UpdateCargoBay();
             part.ModifyCoM();
@@ -669,6 +671,8 @@ namespace SimpleAdjustableFairings
 
             if (deployAltitude * 1000f < vessel.altitude) Deploy();
         }
+
+        private void NotifyModelUpdate() => part.SendEvent("OnPartModelChanged");
 
         #endregion
     }
