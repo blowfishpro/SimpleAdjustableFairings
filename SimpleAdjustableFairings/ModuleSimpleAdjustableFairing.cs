@@ -464,7 +464,6 @@ namespace SimpleAdjustableFairings
             slices.Clear();
             for (int i = 0; i < numSlices; i++)
             {
-
                 GameObject sliceRoot = new GameObject("FairingSlice");
 
                 sliceRoot.transform.NestToParent(fairingRoot.transform);
