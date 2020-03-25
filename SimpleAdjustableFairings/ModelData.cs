@@ -35,8 +35,13 @@ namespace SimpleAdjustableFairings
         [Persistent]
         public Vector3 rootOffset;
 
+        [Persistent]
+        public bool enabled = true;
+
         public ResolvedModelData Resolve(GameObject lookupRoot)
         {
+            if (!enabled) return null;
+
             if (lookupRoot == null) throw new ArgumentNullException(nameof(lookupRoot));
 
             if (string.IsNullOrEmpty(transformName)) throw new TransformNameMissingException();
