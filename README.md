@@ -20,6 +20,10 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 
 ## Changelog
 
+### v1.9.0
+
+* Recompile against KSP 1.9.1
+
 ### v1.8.0
 
 * Add `enabled` attribute to model data (default `true`)
