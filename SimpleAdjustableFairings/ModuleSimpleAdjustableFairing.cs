@@ -246,6 +246,17 @@ namespace SimpleAdjustableFairings
         {
             base.OnStartFinished(state);
 
+            if (deployed)
+            {
+                part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_CLOSED, 0);
+                part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_DEPLOYED, 1);
+            }
+            else
+            {
+                part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_CLOSED, 1);
+                part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_DEPLOYED, 0);
+            }
+
             NotifyFARToRevoxelize();
             RecalculateDragCubes();
             IgnoreColliders();
@@ -647,12 +658,23 @@ namespace SimpleAdjustableFairings
 
             IEnumerator RecalculateDragCubesCoroutine()
             {
+                float[] dragCubeWeights = part.DragCubes.Cubes.Select(cube => cube.Weight).ToArray();
                 part.DragCubes.ClearCubes();
                 yield return DragCubeSystem.Instance.SetupDragCubeCoroutine(part, null);
-                part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_CLOSED, 1);
-                part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_DEPLOYED, 0);
+
+                if (dragCubeWeights.Length == part.DragCubes.Cubes.Count)
+                {
+                    for (int i = 0; i < dragCubeWeights.Length; i++)
+                    {
+                        part.DragCubes.Cubes[i].Weight = dragCubeWeights[i];
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"[{GetType().Name}] Cannot reassign cube weights: had {dragCubeWeights.Length} cubes before but now have {part.DragCubes.Cubes.Count}");
+                }
+
                 part.DragCubes.ForceUpdate(weights: true, occlusion: true);
-                part.DragCubes.SetPartOcclusion();
             }
 
             StartCoroutine(RecalculateDragCubesCoroutine());
