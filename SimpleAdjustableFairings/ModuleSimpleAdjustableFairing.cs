@@ -7,9 +7,14 @@ using UnityEngine;
 
 namespace SimpleAdjustableFairings
 {
-    public class ModuleSimpleAdjustableFairing : PartModule, IScalarModule, IPartCoMModifier, ISerializationCallbackReceiver
+    public class ModuleSimpleAdjustableFairing : PartModule, IScalarModule, IPartCoMModifier, ISerializationCallbackReceiver, IMultipleDragCube
     {
         public const string FAIRING_ROOT_TRANSFORM_NAME = "FairingRoot";
+
+        private const string DRAG_CUBE_NAME_CLOSED = "Closed";
+        private const string DRAG_CUBE_NAME_DEPLOYED = "Deployed";
+
+        private static readonly string[] DRAG_CUBE_NAMES = { DRAG_CUBE_NAME_CLOSED, DRAG_CUBE_NAME_DEPLOYED };
 
         #region Loadable Fields
 
@@ -372,6 +377,24 @@ namespace SimpleAdjustableFairings
             return (mass > 0) ? CoM / mass : Vector3.zero;
         }
 
+        public bool IsMultipleCubesActive => true;
+
+        public string[] GetDragCubeNames() => DRAG_CUBE_NAMES;
+
+        public void AssumeDragCubePosition(string name)
+        {
+            if (fairingRoot == null) return;
+
+            if (name == DRAG_CUBE_NAME_CLOSED)
+                fairingRoot.SetActive(true);
+            else if (name == DRAG_CUBE_NAME_DEPLOYED)
+                fairingRoot.SetActive(false);
+            else
+                throw new ArgumentException($"Invalid drag cube name: {name}");
+        }
+
+        public bool UsesProceduralDragCubes() => false;
+
         #endregion
 
         #region Private Methods
@@ -626,8 +649,9 @@ namespace SimpleAdjustableFairings
             {
                 part.DragCubes.ClearCubes();
                 yield return DragCubeSystem.Instance.SetupDragCubeCoroutine(part, null);
+                part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_CLOSED, 1);
+                part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_DEPLOYED, 0);
                 part.DragCubes.ForceUpdate(weights: true, occlusion: true);
-                part.DragCubes.SetDragWeights();
                 part.DragCubes.SetPartOcclusion();
             }
 
@@ -687,8 +711,10 @@ namespace SimpleAdjustableFairings
 
             needsNotifyFARToRevoxelize = true;
             NotifyFARToRevoxelize();
-            needsRecalculateDragCubes = true;
-            RecalculateDragCubes();
+
+            part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_CLOSED, 0);
+            part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_DEPLOYED, 1);
+            part.DragCubes.ForceUpdate(weights: true, occlusion: true);
 
             OnStop.Fire(1f);
 
