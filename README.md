@@ -20,6 +20,11 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 
 ## Changelog
 
+### v1.9.1
+
+* Pre-render both drag cubes rather than re-rendering at deployment
+  * Fix exceptions and potential physics weirdness at deployment
+
 ### v1.9.0
 
 * Recompile against KSP 1.9.1
