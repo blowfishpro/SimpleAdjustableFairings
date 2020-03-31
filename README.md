@@ -20,6 +20,14 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 
 ## Changelog
 
+### v1.10.0
+
+* Don't modify drag cubes/FAR/colliders if deployed (fixes an exception when loading a craft with a deployed fairing)
+* Group all of the fairing's fields and events in the part action window:
+  * Adds two new fields to `ModuleSimpleAdjustableFairing`:
+    * `uiGroupName` - unique identifier for the group, defaults to `fairing`
+    * `uiGroupDisplayName` - name of the group to display in the UI, defaults to `Fairing`
+
 ### v1.9.1
 
 * Pre-render both drag cubes rather than re-rendering at deployment
