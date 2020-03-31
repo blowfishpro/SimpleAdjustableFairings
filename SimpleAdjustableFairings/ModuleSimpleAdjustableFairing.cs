@@ -54,6 +54,12 @@ namespace SimpleAdjustableFairings
         [KSPField]
         public float scale = 1f;
 
+        [KSPField]
+        public string uiGroupName = "fairing";
+
+        [KSPField]
+        public string uiGroupDisplayName = "Fairing";
+
         [Persistent(name = "WALL_BASE")]
         public ModelData wallBaseData = null;
 
@@ -229,6 +235,8 @@ namespace SimpleAdjustableFairings
 
                 CalculateAutodeployAltitude();
             }
+
+            SetUiGroups();
             UpdateDeployAltitudeVisibility();
 
             if (state == StartState.Editor)
@@ -570,6 +578,21 @@ namespace SimpleAdjustableFairings
             this.GetUIControl(nameof(autoDeploy)).onFieldChanged = OnToggleAutodeploy;
         }
 
+        private void SetUiGroups()
+        {
+            foreach (BaseField field in Fields)
+            {
+                field.group.name = uiGroupName;
+                field.group.displayName = uiGroupDisplayName;
+            }
+
+            foreach (BaseEvent baseEvent in Events)
+            {
+                baseEvent.group.name = uiGroupName;
+                baseEvent.group.displayName = uiGroupDisplayName;
+            }
+        }
+
         private void CalculateAutodeployAltitude()
         {
             UI_FloatRange deployAltitudeControl = this.GetUIControl<UI_FloatRange>(nameof(deployAltitude));
@@ -700,6 +723,8 @@ namespace SimpleAdjustableFairings
             if (deployed) return;
 
             OnMoving.Fire(0f, 1f);
+
+            if (UIPartActionController.Instance is UIPartActionController partActionController && partActionController.GetItem(part, false) is UIPartActionWindow window) window.displayDirty = true;
 
             foreach (FairingSlice slice in slices)
             {
