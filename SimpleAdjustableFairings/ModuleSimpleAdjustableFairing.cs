@@ -724,6 +724,8 @@ namespace SimpleAdjustableFairings
 
             OnMoving.Fire(0f, 1f);
 
+            if (UIPartActionController.Instance is UIPartActionController partActionController && partActionController.GetItem(part, false) is UIPartActionWindow window) window.displayDirty = true;
+
             foreach (FairingSlice slice in slices)
             {
                 GameObject gameObject = slice.SliceRootObject;
