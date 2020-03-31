@@ -255,11 +255,11 @@ namespace SimpleAdjustableFairings
             {
                 part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_CLOSED, 1);
                 part.DragCubes.SetCubeWeight(DRAG_CUBE_NAME_DEPLOYED, 0);
-            }
 
-            NotifyFARToRevoxelize();
-            RecalculateDragCubes();
-            IgnoreColliders();
+                NotifyFARToRevoxelize();
+                RecalculateDragCubes();
+                IgnoreColliders();
+            }
         }
 
         #endregion
