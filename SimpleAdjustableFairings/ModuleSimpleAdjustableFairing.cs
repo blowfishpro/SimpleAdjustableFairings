@@ -120,9 +120,6 @@ namespace SimpleAdjustableFairings
         private bool needsRecalculateDragCubes;
         private bool needsNotifyFARToRevoxelize;
 
-        // hack to deterimine if we're on the icon when we get new data
-        private bool icon = false;
-
         #endregion
 
         #region Properties
