@@ -8,7 +8,7 @@ This plugin adds no parts by itself, it is designed to be used with a specific p
 
 This plugin is designed to work with a specific version of KSP, any others may not work:
 
-* KSP Version: 1.9.1
+* KSP Version: 1.10.1
 
 ## License
 
