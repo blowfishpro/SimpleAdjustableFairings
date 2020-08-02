@@ -20,6 +20,10 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 
 ## Changelog
 
+### v1.11.0
+
+* Recompile against KSP 1.10.1
+
 ### v1.10.1
 
 * Fix transparency not being set correctly on disabled objects (which might become enabled by switching)
