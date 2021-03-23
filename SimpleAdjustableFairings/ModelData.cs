@@ -38,7 +38,7 @@ namespace SimpleAdjustableFairings
         [Persistent]
         public bool enabled = true;
 
-        public ResolvedModelData Resolve(GameObject lookupRoot)
+        public ResolvedModelData Resolve(GameObject lookupRoot, float scale)
         {
             if (!enabled) return null;
 
@@ -50,7 +50,7 @@ namespace SimpleAdjustableFairings
 
             if (prefab == null) throw new ObjectNotFoundException(transformName);
 
-            return new ResolvedModelData(prefab, mass, CoM, rootOffset);
+            return new ResolvedModelData(prefab, mass * scale * scale, CoM * scale, rootOffset * scale);
         }
     }
 
