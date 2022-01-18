@@ -69,7 +69,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>
-      sh -e -c "cd '$(SolutionDir)' &amp;&amp; 'bin/fill-version' '$(SolutionDir)/templates/AssemblyInfo.cs.erb' '$(ProjectDir)/Properties/AssemblyInfo.cs'"
+      sh -e -c "cd '$(SolutionDir)' &amp;&amp; bundle exec fill-version '$(SolutionDir)/templates/AssemblyInfo.cs.erb' '$(ProjectDir)/Properties/AssemblyInfo.cs'"
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
