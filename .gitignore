@@ -238,3 +238,4 @@ $RECYCLE.BIN/
 
 *.zip
 Properties/
+Gemfile.lock
