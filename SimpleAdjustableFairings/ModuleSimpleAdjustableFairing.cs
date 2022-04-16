@@ -120,6 +120,8 @@ namespace SimpleAdjustableFairings
         private bool needsRecalculateDragCubes;
         private bool needsNotifyFARToRevoxelize;
 
+		private float fairingScale = 1.0f;
+
         #endregion
 
         #region Properties
@@ -172,6 +174,24 @@ namespace SimpleAdjustableFairings
 
         [KSPEvent]
         public void FarWasNotifiedToRevoxelize() => needsNotifyFARToRevoxelize = false;
+
+        [KSPEvent]
+        void OnPartScaleChanged(BaseEventDetails data)
+        {
+            fairingScale = data.Get<float>("factorAbsolute");
+
+            if (!FindTransforms()) return;
+
+            // Not yet initialized
+            if (fairingRoot == null) return;
+
+            SetupFairing();
+
+            NotifyFARToRevoxelize();
+            RecalculateDragCubes();
+
+            IgnoreColliders();
+        }
 
         #endregion
 
@@ -434,7 +454,7 @@ namespace SimpleAdjustableFairings
             {
                 try
                 {
-                    wallBaseObjectPrefab = wallBaseData.Resolve(modelRoot);
+                    wallBaseObjectPrefab = wallBaseData.Resolve(modelRoot, fairingScale);
                 }
                 catch (ModelData.ResolveException ex)
                 {
@@ -447,7 +467,7 @@ namespace SimpleAdjustableFairings
             {
                 try
                 {
-                    wallObjectPrefab = wallData.Resolve(modelRoot);
+                    wallObjectPrefab = wallData.Resolve(modelRoot, fairingScale);
                 }
                 catch (ModelData.ResolveException ex)
                 {
@@ -460,7 +480,7 @@ namespace SimpleAdjustableFairings
             {
                 try
                 {
-                    capObjectPrefab = capData.Resolve(modelRoot);
+                    capObjectPrefab = capData.Resolve(modelRoot, fairingScale);
                 }
                 catch (ModelData.ResolveException ex)
                 {
@@ -483,7 +503,7 @@ namespace SimpleAdjustableFairings
             {
                 try
                 {
-                    coneObjectPrefab = coneData.Resolve(modelRoot);
+                    coneObjectPrefab = coneData.Resolve(modelRoot, fairingScale);
                 }
                 catch (ModelData.ResolveException ex)
                 {
