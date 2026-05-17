@@ -8,7 +8,7 @@ This plugin adds no parts by itself, it is designed to be used with a specific p
 
 This plugin is designed to work with a specific version of KSP, any others may not work:
 
-* KSP Version: 1.11.2
+* KSP Version: 1.12.5
 
 ## License
 
@@ -19,6 +19,10 @@ Code and plugin are distributed under the [GNU Lesser General Public License](ht
 [Available on Github](https://github.com/blowfishpro/SimpleAdjustableFairings/)
 
 ## Changelog
+
+### v1.12.1
+
+* Recompile against KSP 1.12.5
 
 ### v1.12.0
 
